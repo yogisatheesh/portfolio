@@ -1,0 +1,430 @@
+<!-- Save as: portfolio.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Portfolio — One Stop Solution</title>
+  <meta name="description" content="Selected portfolio from One Stop Solution — branding, websites, campaigns and more. Click any project to view the gallery." />
+  <link rel="icon" href="/assets/favicon.jpeg" />
+  <style>
+    :root{
+      --max:1200px; --pad:24px;
+      --brand:#F3BE2D;
+      --bg:#ffffff; --card:#ffffff; --text:#111; --muted:#667085;
+      --border:#E6E9EE; --shadow:0 10px 30px rgba(8,15,30,.06);
+      --radius:14px;
+    }
+    [data-theme="dark"]{
+      --bg:#071017; --card:#0e1418; --text:#e6eef6; --muted:#9aa4b2; --border:#1f282d; --shadow:0 20px 40px rgba(0,0,0,.6);
+    }
+
+    /* Basic reset */
+    *{box-sizing:border-box}html,body{height:100%}
+    body{
+      margin:0;font-family:Inter, "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color:var(--text); background:var(--bg); -webkit-font-smoothing:antialiased;
+      padding: clamp(16px, 4vw, 40px);
+    }
+    .container{ max-width:var(--max); margin:0 auto; padding:0 var(--pad); }
+
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:28px; }
+    .brand{ font-weight:900; font-size:1.05rem; letter-spacing:-0.02em; display:flex; gap:.6rem; align-items:center; }
+    .brand .dot{ width:11px; height:11px; background:var(--brand); border-radius:50%; display:inline-block; box-shadow:0 6px 18px rgba(243,190,45,.18); }
+
+    h1{ font-size: clamp(22px, 3.6vw, 36px); margin:0 0 8px 0; font-weight:900; }
+    p.lead{ margin:0 0 18px 0; color:var(--muted); max-width:900px; }
+
+    /* Filters row */
+    .filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .filter-btn{
+      border:1px solid var(--border); background:var(--card); padding:.5rem .8rem; border-radius:999px;
+      font-weight:700; cursor:pointer; color:var(--text); box-shadow: var(--shadow); transition:transform .12s ease, background .18s ease;
+    }
+    .filter-btn.active{ background:var(--brand); color:#111; transform: translateY(-2px); }
+
+    /* Projects grid */
+    .projects-grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:20px;
+    }
+    .project-card{
+      background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);
+      cursor:pointer; position:relative; display:flex; flex-direction:column;
+      transition:transform .22s ease, box-shadow .22s ease;
+    }
+    .project-card:focus{ outline: 3px solid color-mix(in srgb, var(--brand) 50%, transparent); outline-offset:6px; }
+    .project-card:hover{ transform: translateY(-6px); }
+
+    .thumb{
+      width:100%; height:180px; overflow:hidden; display:block; background:#f3f4f6;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .card-body{ padding:14px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .meta{ display:flex; flex-direction:column; gap:4px; }
+    .meta .title{ font-weight:800; font-size:1rem; color:var(--text); }
+    .meta .cat{ font-size:.82rem; color:var(--muted); font-weight:700; letter-spacing:.02em; }
+
+    .badge{ font-weight:800; font-size:.82rem; color:var(--brand); }
+
+    /* Responsive grid */
+    @media (max-width:1100px){ .projects-grid{ grid-template-columns: repeat(3,1fr); } .thumb{ height:160px } }
+    @media (max-width:800px){ .projects-grid{ grid-template-columns: repeat(2,1fr); } .thumb{ height:140px } }
+    @media (max-width:520px){ .projects-grid{ grid-template-columns: 1fr; } .thumb{ height:200px } }
+
+    /* Modal gallery overlay */
+    .gallery-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center;
+      z-index:9999; padding:32px; backdrop-filter: blur(6px);
+    }
+    .gallery-overlay.active{ display:flex; }
+
+    .gallery-card{
+      width:100%; max-width:1080px; max-height:90vh; background:var(--card); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);
+      display:flex; flex-direction:column;
+    }
+    .gallery-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+    .gallery-title{ font-weight:900; font-size:1.05rem; }
+    .gallery-controls{ display:flex; gap:8px; align-items:center; }
+
+    .gbtn{
+      background:transparent; border:1px solid var(--border); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:800;
+    }
+    .gbtn.icon{ width:44px; height:44px; display:inline-grid; place-items:center; font-size:18px; }
+
+    .gallery-body{ padding:18px; overflow:auto; display:flex; gap:18px; align-items:flex-start; }
+    .gallery-img{ width:60%; min-width:320px; max-height:70vh; overflow:hidden; border-radius:12px; }
+    .gallery-img img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+    .gallery-info{ width:40%; min-width:200px; padding:6px 6px 6px 0; display:flex; flex-direction:column; gap:12px; color:var(--muted); }
+    .gallery-desc{ color:var(--text); font-weight:700; }
+
+    /* small screens: stack */
+    @media (max-width:880px){
+      .gallery-body{ flex-direction:column; }
+      .gallery-img, .gallery-info{ width:100%; min-width:0; }
+    }
+
+    /* accessible hidden */
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="container" role="main">
+    <header>
+      <div class="brand"><span class="dot" aria-hidden="true"></span> One Stop Solution</div>
+      <nav aria-label="breadcrumb">
+        <a href="/" style="color:var(--muted); font-weight:700; text-decoration:none;">Home</a>
+      </nav>
+    </header>
+
+    <h1>Portfolio — Selected Work</h1>
+    <p class="lead">Tap a project to open the gallery. Filter by category or use keyboard ← → to navigate inside the popup.</p>
+
+    <div class="filters" role="tablist" aria-label="Project filters">
+      <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
+      <button class="filter-btn" data-filter="branding" role="tab" aria-selected="false">Branding</button>
+      <button class="filter-btn" data-filter="web" role="tab" aria-selected="false">Websites</button>
+      <button class="filter-btn" data-filter="social" role="tab" aria-selected="false">Social</button>
+    </div>
+
+    <!-- Projects grid: 12 items -->
+    <div class="projects-grid" id="projectsGrid" aria-live="polite">
+      <!-- Template for each project: update image paths and text -->
+      <!-- 1 -->
+      <article class="project-card" tabindex="0" role="button" data-id="1" data-cat="branding" data-title="Brand Identity — Kavi" data-desc="Logo, stationery and brand guidelines." data-img="/assets/portfolio/1-full.jpg" data-thumb="/assets/portfolio/1-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/1-thumb.jpg" alt="Kavi — Brand Identity"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Kavi — Brand Identity</div>
+            <div class="cat">Branding</div>
+          </div>
+          <div class="badge">01</div>
+        </div>
+      </article>
+
+      <!-- 2 -->
+      <article class="project-card" tabindex="0" role="button" data-id="2" data-cat="web" data-title="E-commerce Website — Verde" data-desc="Responsive e-commerce with product filters and CMS." data-img="/assets/portfolio/2-full.jpg" data-thumb="/assets/portfolio/2-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/2-thumb.jpg" alt="Verde — E-commerce Website"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Verde — E-commerce</div>
+            <div class="cat">Websites</div>
+          </div>
+          <div class="badge">02</div>
+        </div>
+      </article>
+
+      <!-- 3 -->
+      <article class="project-card" tabindex="0" role="button" data-id="3" data-cat="social" data-title="Campaign — FreshBite" data-desc="Social campaign creative & motion assets." data-img="/assets/portfolio/3-full.jpg" data-thumb="/assets/portfolio/3-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/3-thumb.jpg" alt="FreshBite — Social Campaign"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">FreshBite — Campaign</div>
+            <div class="cat">Social</div>
+          </div>
+          <div class="badge">03</div>
+        </div>
+      </article>
+
+      <!-- 4 -->
+      <article class="project-card" tabindex="0" role="button" data-id="4" data-cat="branding" data-title="Packaging & Label — Sahana Spices" data-desc="Package design and label system for spice range." data-img="/assets/portfolio/4-full.jpg" data-thumb="/assets/portfolio/4-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/4-thumb.jpg" alt="Sahana Spices — Packaging"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Sahana Spices — Packaging</div>
+            <div class="cat">Branding</div>
+          </div>
+          <div class="badge">04</div>
+        </div>
+      </article>
+
+      <!-- 5 -->
+      <article class="project-card" tabindex="0" role="button" data-id="5" data-cat="web" data-title="SaaS Dashboard — Trackly" data-desc="Admin dashboard with charts and user flows." data-img="/assets/portfolio/5-full.jpg" data-thumb="/assets/portfolio/5-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/5-thumb.jpg" alt="Trackly — SaaS Dashboard"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Trackly — Dashboard</div>
+            <div class="cat">Websites</div>
+          </div>
+          <div class="badge">05</div>
+        </div>
+      </article>
+
+      <!-- 6 -->
+      <article class="project-card" tabindex="0" role="button" data-id="6" data-cat="social" data-title="Event Microsite & Ads — Bloom Fest" data-desc="Microsite and paid ad creatives for event." data-img="/assets/portfolio/6-full.jpg" data-thumb="/assets/portfolio/6-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/6-thumb.jpg" alt="Bloom Fest — Event"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Bloom Fest — Event</div>
+            <div class="cat">Social</div>
+          </div>
+          <div class="badge">06</div>
+        </div>
+      </article>
+
+      <!-- 7 -->
+      <article class="project-card" tabindex="0" role="button" data-id="7" data-cat="branding" data-title="Corporate Identity — Arun Foods" data-desc="Brand refresh and corporate stationery." data-img="/assets/portfolio/7-full.jpg" data-thumb="/assets/portfolio/7-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/7-thumb.jpg" alt="Arun Foods — Corporate Identity"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Arun Foods — Identity</div>
+            <div class="cat">Branding</div>
+          </div>
+          <div class="badge">07</div>
+        </div>
+      </article>
+
+      <!-- 8 -->
+      <article class="project-card" tabindex="0" role="button" data-id="8" data-cat="web" data-title="Portfolio Website — Studio A" data-desc="Portfolio site with case studies and lightbox." data-img="/assets/portfolio/8-full.jpg" data-thumb="/assets/portfolio/8-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/8-thumb.jpg" alt="Studio A — Portfolio"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Studio A — Portfolio</div>
+            <div class="cat">Websites</div>
+          </div>
+          <div class="badge">08</div>
+        </div>
+      </article>
+
+      <!-- 9 -->
+      <article class="project-card" tabindex="0" role="button" data-id="9" data-cat="social" data-title="UGC Campaign — FarmFresh" data-desc="UGC-based creative and templates for social." data-img="/assets/portfolio/9-full.jpg" data-thumb="/assets/portfolio/9-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/9-thumb.jpg" alt="FarmFresh — UGC Campaign"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">FarmFresh — UGC</div>
+            <div class="cat">Social</div>
+          </div>
+          <div class="badge">09</div>
+        </div>
+      </article>
+
+      <!-- 10 -->
+      <article class="project-card" tabindex="0" role="button" data-id="10" data-cat="branding" data-title="Sub-brand System — Metro Café" data-desc="Sub-brand and menu system for cafe chain." data-img="/assets/portfolio/10-full.jpg" data-thumb="/assets/portfolio/10-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/10-thumb.jpg" alt="Metro Café — Sub-brand"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">Metro Café — Sub-brand</div>
+            <div class="cat">Branding</div>
+          </div>
+          <div class="badge">10</div>
+        </div>
+      </article>
+
+      <!-- 11 -->
+      <article class="project-card" tabindex="0" role="button" data-id="11" data-cat="web" data-title="Booking App — TripMate" data-desc="Booking flow, search and maps integration." data-img="/assets/portfolio/11-full.jpg" data-thumb="/assets/portfolio/11-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/11-thumb.jpg" alt="TripMate — Booking App"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">TripMate — App</div>
+            <div class="cat">Websites</div>
+          </div>
+          <div class="badge">11</div>
+        </div>
+      </article>
+
+      <!-- 12 -->
+      <article class="project-card" tabindex="0" role="button" data-id="12" data-cat="social" data-title="Launch Pack — HelloPet" data-desc="Launch creatives, banners and short animations." data-img="/assets/portfolio/12-full.jpg" data-thumb="/assets/portfolio/12-thumb.jpg">
+        <div class="thumb"><img loading="lazy" src="/assets/portfolio/12-thumb.jpg" alt="HelloPet — Launch"></div>
+        <div class="card-body">
+          <div class="meta">
+            <div class="title">HelloPet — Launch</div>
+            <div class="cat">Social</div>
+          </div>
+          <div class="badge">12</div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- Gallery Overlay -->
+  <div class="gallery-overlay" id="galleryOverlay" aria-hidden="true" aria-modal="true" role="dialog" aria-label="Project gallery">
+    <div class="gallery-card" role="document">
+      <div class="gallery-top">
+        <div class="gallery-title" id="galleryTitle">Project</div>
+        <div class="gallery-controls" role="toolbar" aria-label="Gallery controls">
+          <button class="gbtn icon" id="prevBtn" title="Previous (Left arrow)">&larr;</button>
+          <button class="gbtn icon" id="nextBtn" title="Next (Right arrow)">&rarr;</button>
+          <button class="gbtn" id="closeBtn" title="Close (Esc)">Close</button>
+        </div>
+      </div>
+      <div class="gallery-body">
+        <div class="gallery-img" id="galleryImgWrap">
+          <img id="galleryImg" src="" alt="">
+        </div>
+        <div class="gallery-info">
+          <div class="gallery-desc" id="galleryDesc">Description</div>
+          <div style="color:var(--muted); font-size:.95rem;" id="galleryMeta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  (function(){
+    const grid = document.getElementById('projectsGrid');
+    const cards = Array.from(document.querySelectorAll('.project-card'));
+    const filters = Array.from(document.querySelectorAll('.filter-btn'));
+
+    // Filter behavior
+    filters.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        filters.forEach(b=> b.classList.remove('active'), b=>b.setAttribute('aria-selected','false'));
+        btn.classList.add('active');
+        filters.forEach(b=> b.setAttribute('aria-selected', b===btn ? 'true' : 'false'));
+        const f = btn.dataset.filter;
+        cards.forEach(c=>{
+          const cat = c.dataset.cat;
+          c.style.display = (f === 'all' || f === cat) ? '' : 'none';
+        });
+      });
+    });
+
+    // Gallery elements
+    const overlay = document.getElementById('galleryOverlay');
+    const imgEl = document.getElementById('galleryImg');
+    const titleEl = document.getElementById('galleryTitle');
+    const descEl = document.getElementById('galleryDesc');
+    const metaEl = document.getElementById('galleryMeta');
+    const closeBtn = document.getElementById('closeBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+
+    // Build array of visible items (filtered-aware)
+    function visibleCards(){
+      return cards.filter(c => c.style.display !== 'none');
+    }
+
+    let currentIndex = -1;
+
+    function openGalleryFromCard(card){
+      const list = visibleCards();
+      currentIndex = list.indexOf(card);
+      showFromList(list, currentIndex);
+      openOverlay();
+    }
+
+    function showFromList(list, idx){
+      if(!list[idx]) return;
+      const c = list[idx];
+      const src = c.dataset.img || c.dataset.thumb;
+      imgEl.src = src;
+      imgEl.alt = c.dataset.title || 'Project image';
+      titleEl.textContent = c.dataset.title || '';
+      descEl.textContent = c.dataset.desc || '';
+      metaEl.textContent = `Category: ${c.dataset.cat} • Item ${c.dataset.id}`;
+      // move focus into overlay for accessibility
+      overlay.setAttribute('aria-hidden','false');
+      closeBtn.focus();
+      document.body.style.overflow = 'hidden';
+    }
+
+    function openOverlay(){
+      overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden','false');
+    }
+    function closeOverlay(){
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      // Return focus to the originating card if possible
+      const list = visibleCards();
+      const card = list[currentIndex];
+      card?.focus();
+    }
+
+    // Click / keyboard on cards
+    cards.forEach(card=>{
+      card.addEventListener('click', ()=> openGalleryFromCard(card));
+      card.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          openGalleryFromCard(card);
+        }
+      });
+    });
+
+    // Controls
+    nextBtn.addEventListener('click', ()=> {
+      const list = visibleCards();
+      currentIndex = (currentIndex + 1) % list.length;
+      showFromList(list, currentIndex);
+    });
+    prevBtn.addEventListener('click', ()=> {
+      const list = visibleCards();
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      showFromList(list, currentIndex);
+    });
+    closeBtn.addEventListener('click', closeOverlay);
+
+    // Keyboard nav: Esc to close; left/right to navigate
+    document.addEventListener('keydown', (e)=>{
+      if(overlay.classList.contains('active')){
+        if(e.key === 'Escape'){ closeOverlay(); }
+        else if(e.key === 'ArrowRight'){ nextBtn.click(); }
+        else if(e.key === 'ArrowLeft'){ prevBtn.click(); }
+      }
+    });
+
+    // Click outside to close
+    overlay.addEventListener('click', (e)=>{
+      if(e.target === overlay) closeOverlay();
+    });
+
+    // Improve image loading: swap thumb -> full on open (if available)
+    // (Already using data-img attribute as full src; browser will fetch when src set)
+
+    // Accessibility: trap focus inside modal while open (basic)
+    document.addEventListener('focus', function(e){
+      if(!overlay.classList.contains('active')) return;
+      const focusable = overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0], last = focusable[focusable.length-1];
+      if(e.target === last && !e.shiftKey){ /* allow */ }
+    }, true);
+
+  })();
+</script>
+</body>
+</html>
